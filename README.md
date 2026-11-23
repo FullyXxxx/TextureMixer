@@ -33,21 +33,21 @@ Install JDK 25 and JDK 21. Set `JAVA_HOME` to JDK 25 to run Gradle. Install JDK 
 
 | Task | Windows | Linux or macOS |
 | --- | --- | --- |
-| Build the default Minecraft 1.21.11 target and run regressions | `gradlew.bat build` | `./gradlew build` |
+| Build the configured Minecraft target and run regressions | `gradlew.bat build` | `./gradlew build` |
 | Start the development client | `gradlew.bat runClient` | `./gradlew runClient` |
 
-Binary JARs are written to `build/libs`. With Python 3.10 or later, use these commands to build specific targets.
+Binary JARs are written to `build/libs`. With Python 3.10 or later, use the command for your target series and replace `<minecraft-version>` with a version from the [compatibility matrix](docs/RELEASE-1.0.0.md#compatibility-matrix).
 
 ```sh
-python tools/build_matrix.py 1.20.4 1.21.11
-python tools/build_native_port.py 26.3
+python tools/build_matrix.py "<minecraft-version>"
+python tools/build_native_port.py "<minecraft-version>"
 ```
 
 Run `python tools/build_matrix.py` without version arguments to build all supported 1.20.x and 1.21.x targets. Run `build_native_port.py` once per 26.x target. Both scripts generate a SHA-256 checksum for each binary.
 
 ## Verification
 
-- Gradle's `build` task runs the core regression suite. To launch an isolated client and verify preview pixels and applied assets, run `python tools/build_matrix.py --audit 1.21.11`.
+- Gradle's `build` task runs the core regression suite. For a supported 1.20.x or 1.21.x target, use `python tools/build_matrix.py --audit "<minecraft-version>"` to verify preview pixels and applied assets in an isolated client.
 - The 26.x graphical audit supports Windows. Pass `--audit` and point `--assets-dir` to the launcher's Minecraft assets directory. See the [release notes](docs/RELEASE-1.0.0.md) for the 26.3 test settings.
 - For optional smoke tests, install Pillow, run `python tools/generate_fixtures.py`, and start Gradle's `runSmokeClient` task with `-PsmokeTest`.
 

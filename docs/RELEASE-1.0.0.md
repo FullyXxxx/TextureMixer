@@ -6,7 +6,7 @@ The November 21, 2026 verification covered 24 Minecraft Java Edition releases ac
 
 - The Block grid, source list, and confirmation dialog use a dedicated fluid preview model. The top uses the `_still` texture and the sides use the `_flow` texture. Previews use the existing model cache and the Minecraft texture atlas.
 - A static replacement texture takes precedence over animation metadata from lower-priority resources. A pack's own `.png.mcmeta` stays with its texture. A missing water overlay falls back to vanilla.
-- In-world rendering selects the mix by fluid. On Minecraft 1.21.11, TextureMixer substitutes the sprites that Fabric passes to the renderer. Water and lava buckets each have independent sources in the Item category.
+- In-world rendering uses the selected source for each fluid. Water and lava buckets each have independent sources in the Item category.
 - The shared confirmation dialog keeps asset previews visible on older clients.
 
 ## Client verification
