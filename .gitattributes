@@ -1,0 +1,6 @@
+* text=auto eol=lf
+*.bat text eol=crlf
+*.jar binary
+*.png binary
+*.ttf binary
+src/main/resources/assets/texturemixer/font/ofl.txt whitespace=-blank-at-eol

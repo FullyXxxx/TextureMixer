@@ -1,0 +1,244 @@
+plugins { id 'fabric-loom' version "${loom_version}" }
+def fabricApiVersion = providers.gradleProperty('fabric_api_version').get()
+def usesJava17 = minecraft_version in ['1.20', '1.20.1', '1.20.2', '1.20.3', '1.20.4']
+def javaVersion = usesJava17 ? 17 : 21
+def usesOldIdentifiers = usesJava17 || minecraft_version in ['1.20.5', '1.20.6']
+def usesPreEquipment = minecraft_version in ['1.21', '1.21.1'] || usesOldIdentifiers
+def usesLegacyItemModels = minecraft_version in ['1.21.2', '1.21.3'] || usesPreEquipment
+def usesLegacyGl = minecraft_version == '1.21.4' || usesLegacyItemModels
+def usesImmediateGui = minecraft_version == '1.21.5' || usesLegacyGl
+def usesUnsplitItemState = minecraft_version == '1.21.6' || usesImmediateGui
+def usesDirectModelRendering = minecraft_version in ['1.21.6', '1.21.7', '1.21.8'] || usesImmediateGui
+def usesLegacyRenderLayers = minecraft_version in ['1.21.6', '1.21.7', '1.21.8', '1.21.9', '1.21.10']
+if (minecraft_version != '1.21.11' && !usesLegacyRenderLayers && !usesImmediateGui) {
+    throw new GradleException("TextureMixer has no client implementation for Minecraft $minecraft_version")
+}
+def pipelineMixins = usesLegacyGl ? '"AtlasDimensions",' : '"RenderPipelinesAccess","DryColorMixin",'
+if (minecraft_version == '1.21.4') pipelineMixins += '"ItemDisplayModeAccess",'
+def itemModelMixins = usesLegacyItemModels
+        ? '"ItemColorsAccess","BlockPreviewLayerMixin","LegacyModelCollectorMixin",'
+        : '"ItemAssetsMixin","SpecialItemMixin","PreviewNestedItemMixin",'
+if (usesPreEquipment) itemModelMixins += '"ImmediateVertices",'
+if (usesPreEquipment && !usesOldIdentifiers) itemModelMixins += '"LegacyBlockStatesMixin",'
+def newerEquipmentMixins = ['EquipmentLoaderMixin','TrimTextureMixin','TrimKeyAccess','PreviewTrimMixin','PreviewTrimLayerMixin',
+    'WornStateMixin','WornStateCaptureMixin','WornHeadMixin']
+def newerWorldMixins = ['SkyLayersMixin','CloudRendererAccess','CloudScopeMixin','MapDecorationMixin']
+version = "${mod_version}+${minecraft_version}"
+group = 'com.fullyx'
+base { archivesName = 'TextureMixer' }
+def matrixBuildDirectory = providers.gradleProperty('matrixBuildDirectory').orNull
+if (matrixBuildDirectory != null) layout.buildDirectory.set(file(matrixBuildDirectory))
+
+repositories {
+    maven {
+        url = 'https://api.modrinth.com/maven'
+        content { includeModule('maven.modrinth', 'modmenu') }
+    }
+}
+
+dependencies {
+    modCompileOnly('maven.modrinth:modmenu:17.0.1') { transitive = false }
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings "net.fabricmc:yarn:${yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}"
+    if(project.hasProperty('compatMods')) {
+        modLocalRuntime fileTree(project.property('compatMods')) { include '*.jar' }
+        runtimeOnly fileTree("${project.property('compatMods')}/libraries") { include '*.jar' }
+    }
+}
+tasks.withType(Jar).configureEach {
+    from(['LICENSE', 'THIRD-PARTY-NOTICES.md']) { into 'META-INF' }
+}
+processResources {
+    if (usesImmediateGui) exclude 'assets/texturemixer/shaders/core/sky.vsh'
+    else exclude 'assets/texturemixer/shaders/core/sky_immediate.vsh'
+    if (!usesLegacyGl || usesPreEquipment) exclude 'assets/texturemixer/shaders/core/sky_legacy.json'
+    def metadata = [version: project.version, minecraft: minecraft_version, loader: loader_version,
+                    fabricApi: fabricApiVersion, javaVersion: javaVersion]
+    inputs.properties(metadata)
+    filesMatching('fabric.mod.json') { expand metadata }
+    def blockAtlasMixin = usesLegacyRenderLayers || usesImmediateGui ? '' : '"PreviewBlockAtlasMixin",'
+    inputs.property 'blockAtlasMixin', blockAtlasMixin
+    def atlasManagerMixin = usesDirectModelRendering ? '' : '"AtlasSpriteMixin",'
+    inputs.property 'atlasManagerMixin', atlasManagerMixin
+    def deferredGuiMixins = usesImmediateGui ? '' : '"DrawContextAccess","EnchantGuiMixin","EnchantItemGuiMixin","EnchantSubmissionMixin",'
+    inputs.property 'deferredGuiMixins', deferredGuiMixins
+    inputs.property 'pipelineMixins', pipelineMixins
+    inputs.property 'itemModelMixins', itemModelMixins
+    inputs.property 'usesPreEquipment', usesPreEquipment
+    filesMatching('texturemixer.mixins.json') {
+        expand blockAtlasMixin: blockAtlasMixin, atlasManagerMixin: atlasManagerMixin,
+                deferredGuiMixins: deferredGuiMixins, pipelineMixins: pipelineMixins, itemModelMixins: itemModelMixins
+        if (usesPreEquipment) filter { line ->
+            (newerEquipmentMixins + newerWorldMixins).each { mixin -> line = line.replace('"' + mixin + '",', '') }
+            return usesJava17 ? line.replace('JAVA_21', 'JAVA_17') : line
+        }
+    }
+}
+tasks.withType(JavaCompile).configureEach {
+    options.release = javaVersion
+    options.encoding = 'UTF-8'
+    if (project.hasProperty('matrixBuildDirectory')) options.incremental = false
+}
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.toVersion(javaVersion)
+    targetCompatibility = JavaVersion.toVersion(javaVersion)
+}
+// Loom runs on Java 25, while each Minecraft client uses its own Java version.
+tasks.withType(JavaExec).configureEach {
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(javaVersion) }
+}
+sourceSets {
+    main {
+        if (usesPreEquipment) resources.srcDir 'src/mc12101/resources'
+        if (usesJava17) {
+            def variants = ['main', 'mc12110', 'mc12108', 'mc12106', 'mc12105', 'mc12104', 'mc12103', 'mc12101', 'mc12006', 'mc12004']
+            if (minecraft_version != '1.20.4') variants += 'mc12003'
+            if (minecraft_version in ['1.20', '1.20.1', '1.20.2']) variants += 'mc12002'
+            if (minecraft_version in ['1.20', '1.20.1']) variants += 'mc12001'
+            def selected = [:]
+            variants.each { variant ->
+                def root = file("src/${variant}/java")
+                java.srcDir root
+                fileTree(root).matching { include '**/*.java' }.each { candidate ->
+                    selected[root.toPath().relativize(candidate.toPath()).toString()] = candidate.canonicalFile
+                }
+            }
+            def unavailable = (newerEquipmentMixins + newerWorldMixins + [
+                'CloudBindings', 'DrawContextAccess', 'EnchantGuiMixin', 'EnchantItemGuiMixin', 'EnchantSubmissionMixin',
+                'RenderPipelinesAccess', 'DryColorMixin', 'PreviewCompat', 'PreviewBlockAtlasMixin', 'AtlasSpriteMixin',
+                'ItemAssetsMixin', 'SpecialItemMixin', 'ScopedSpecialRenderer', 'PreviewNestedItemMixin',
+                'ItemDisplayModeAccess', 'LegacyBlockStatesMixin'
+            ]).collect { it + '.java' } as Set
+            def selectedFiles = selected.values().toSet()
+            java.exclude { entry -> !entry.directory && (!selectedFiles.contains(entry.file.canonicalFile) || unavailable.contains(entry.file.name)) }
+            return
+        }
+        def mainJava = file('src/main/java').toPath()
+        def olderJava = file('src/mc12110/java').toPath()
+        if (usesDirectModelRendering) {
+            java.srcDirs 'src/mc12108/java', 'src/mc12110/java'
+            if (usesUnsplitItemState) java.srcDir 'src/mc12106/java'
+            if (usesImmediateGui) java.srcDir 'src/mc12105/java'
+            if (usesLegacyGl) java.srcDir 'src/mc12104/java'
+            if (usesLegacyItemModels) java.srcDir 'src/mc12103/java'
+            if (usesPreEquipment) java.srcDir 'src/mc12101/java'
+            if (usesOldIdentifiers) java.srcDir 'src/mc12006/java'
+            def directJava = file('src/mc12108/java').toPath()
+            def immediateJava = file('src/mc12105/java').toPath()
+            def immediateFiles = fileTree(immediateJava.toFile()).matching { include '**/*.java' }.files.collect { it.name } as Set
+            def deferredOnly = ['DrawContextAccess.java','EnchantGuiMixin.java','EnchantItemGuiMixin.java','EnchantSubmissionMixin.java']
+            def legacyGlJava = file('src/mc12104/java').toPath()
+            def legacyGlFiles = fileTree(legacyGlJava.toFile()).matching { include '**/*.java' }.files.collect { it.name } as Set
+            def pipelineOnly = ['RenderPipelinesAccess.java','DryColorMixin.java']
+            def legacyItemJava = file('src/mc12103/java').toPath()
+            def legacyItemFiles = fileTree(legacyItemJava.toFile()).matching { include '**/*.java' }.files.collect { it.name } as Set
+            def modernItemsOnly = ['ItemAssetsMixin.java','SpecialItemMixin.java','ScopedSpecialRenderer.java','PreviewNestedItemMixin.java','ItemDisplayModeAccess.java']
+            def preEquipmentJava = file('src/mc12101/java').toPath()
+            def preEquipmentFiles = fileTree(preEquipmentJava.toFile()).matching { include '**/*.java' }.files.collect { it.name } as Set
+            def newerEquipmentSources = (newerEquipmentMixins + newerWorldMixins + ['CloudBindings']).collect { it + '.java' }
+            def oldIdentifierJava = file('src/mc12006/java').toPath()
+            def oldIdentifierFiles = fileTree(oldIdentifierJava.toFile()).matching { include '**/*.java' }.files.collect { it.name } as Set
+            def directFiles = fileTree('src/mc12108/java').matching { include '**/*.java' }.files.collect { it.name } as Set
+            def queuedOnly = ['PreviewCompat.java', 'AtlasSpriteMixin.java', 'PreviewBlockAtlasMixin.java']
+            java.exclude { entry ->
+                def path = entry.file.toPath()
+                def name = entry.file.name
+                (usesOldIdentifiers && !path.startsWith(oldIdentifierJava) && (oldIdentifierFiles.contains(name) || name == 'LegacyBlockStatesMixin.java')) ||
+                    (usesPreEquipment && !path.startsWith(preEquipmentJava) && !path.startsWith(oldIdentifierJava) && (preEquipmentFiles.contains(name) || newerEquipmentSources.contains(name))) ||
+                    (usesLegacyItemModels && !path.startsWith(legacyItemJava) && !path.startsWith(preEquipmentJava) && !path.startsWith(oldIdentifierJava) && (legacyItemFiles.contains(name) || modernItemsOnly.contains(name))) ||
+                    (usesLegacyGl && !path.startsWith(legacyGlJava) && !path.startsWith(legacyItemJava) && !path.startsWith(preEquipmentJava) && !path.startsWith(oldIdentifierJava) && (legacyGlFiles.contains(name) || pipelineOnly.contains(name))) ||
+                    (usesImmediateGui && !path.startsWith(immediateJava) && !path.startsWith(legacyGlJava) && !path.startsWith(legacyItemJava) && !path.startsWith(preEquipmentJava) && !path.startsWith(oldIdentifierJava) && (immediateFiles.contains(name) || deferredOnly.contains(name))) ||
+                    (usesUnsplitItemState && (path.startsWith(mainJava) || path.startsWith(directJava))
+                    && name in ['ItemDisplayState.java','EnchantItemGuiMixin.java']) ||
+                    ((path.startsWith(mainJava) || path.startsWith(olderJava)) && directFiles.contains(name)) ||
+                    (path.startsWith(mainJava) && (queuedOnly.contains(name) || name in ['FluidScopeMixin.java','PreviewModelLayerMixin.java','RenderLayersMixin.java']))
+            }
+        } else {
+            java.srcDirs 'src/queued/java', (usesLegacyRenderLayers ? 'src/mc12110/java' : 'src/mc12111/java')
+            if (usesLegacyRenderLayers) {
+                def replaced = ['SkyLayersMixin.java', 'RenderLayersMixin.java', 'FluidScopeMixin.java', 'PreviewModelLayerMixin.java', 'WorldSkyMixin.java', 'PreviewBlockAtlasMixin.java']
+                java.exclude { entry -> entry.file.toPath().startsWith(mainJava) && replaced.contains(entry.file.name) }
+            }
+        }
+    }
+    regression {
+        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+        runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+    }
+}
+tasks.register('regressionTest', JavaExec) {
+    dependsOn regressionClasses
+    classpath = sourceSets.regression.runtimeClasspath
+    mainClass = 'com.fullyx.texturemixer.CoreRegression'
+    systemProperty 'texturemixer.testVanilla', 'true'
+}
+tasks.named('check') { dependsOn regressionTest }
+if (project.hasProperty('smokeTest')) {
+    sourceSets {
+        smoke {
+            compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+            runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+        }
+    }
+    loom {
+        mods {
+            texturemixer { sourceSet sourceSets.main }
+            texturemixer_smoke { sourceSet sourceSets.smoke }
+        }
+        runs {
+            smokeClient {
+                inherit client
+                source sourceSets.smoke
+                runDir 'run-smoke'
+                programArg '--width'; programArg '1280'
+                programArg '--height'; programArg '720'
+                if(project.hasProperty('smokeUiCheck')) vmArg '-Dtexturemixer.smokeUiCheck=true'
+                if(project.hasProperty('smokePackApply')) vmArg '-Dtexturemixer.smokePackApply=true'
+                if(project.hasProperty('smokeAlpha8')) vmArg '-Dtexturemixer.smokeAlpha8=true'
+                if(project.hasProperty('smokeAlpha12')) vmArg '-Dtexturemixer.smokeAlpha12=true'
+                if(project.hasProperty('smokeAlpha11')) vmArg '-Dtexturemixer.smokeAlpha11=true'
+                if(project.hasProperty('dynamicPack')) vmArg "-Dtexturemixer.dynamicPack=${project.property('dynamicPack')}"
+                if(project.hasProperty('smokeAlpha10')) vmArg '-Dtexturemixer.smokeAlpha10=true'
+                if(project.hasProperty('actualPackConfig')) vmArg "-Dtexturemixer.actualPackConfig=${project.property('actualPackConfig')}"
+                if(project.hasProperty('smokeAlpha9')) vmArg '-Dtexturemixer.smokeAlpha9=true'
+                if(project.hasProperty('smokePreviewFlow')) vmArg '-Dtexturemixer.smokePreviewFlow=true'
+                if(project.hasProperty('smokeAlpha7')) vmArg '-Dtexturemixer.smokeAlpha7=true'
+                if(project.hasProperty('smokeAlpha6')) vmArg '-Dtexturemixer.smokeAlpha6=true'
+                if(project.hasProperty('smokeAlpha5')) vmArg '-Dtexturemixer.smokeAlpha5=true'
+                if(project.hasProperty('smokeAlpha4')) vmArg '-Dtexturemixer.smokeAlpha4=true'
+                if(project.hasProperty('smokeAlpha3')) vmArg '-Dtexturemixer.smokeAlpha3=true'
+                if(project.hasProperty('packProbeRoot')) vmArg "-Dtexturemixer.packProbeRoot=${project.property('packProbeRoot')}"
+                if(project.hasProperty('smokePickerCheck')) vmArg '-Dtexturemixer.smokePickerCheck=true'
+            }
+        }
+    }
+}
+
+if (project.hasProperty('versionAudit')) {
+    sourceSets {
+        versionAudit {
+            compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+            runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+        }
+    }
+    loom {
+        mods {
+            texturemixer { sourceSet sourceSets.main }
+            texturemixer_version_audit { sourceSet sourceSets.versionAudit }
+        }
+        runs {
+            versionAuditClient {
+                inherit client
+                source sourceSets.versionAudit
+                runDir providers.gradleProperty('versionAuditRunDirectory').getOrElse("run-version-audit/$minecraft_version")
+                if(project.hasProperty('versionWorldAudit')) vmArg '-Dtexturemixer.versionWorldAudit=true'
+                if(project.hasProperty('versionFeatureAudit')) vmArg '-Dtexturemixer.versionFeatureAudit=true'
+                programArg '--width'; programArg '1280'
+                programArg '--height'; programArg '720'
+            }
+        }
+    }
+}

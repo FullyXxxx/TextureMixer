@@ -1,0 +1,19 @@
+package com.fullyx.texturemixer.compat.mc12111;
+import com.fullyx.texturemixer.client.EquipmentBindings;
+import net.minecraft.client.render.entity.equipment.EquipmentRenderer;
+import net.minecraft.client.texture.Sprite;
+import java.util.function.Function;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.*;
+@Mixin(EquipmentRenderer.class)
+public abstract class PreviewTrimMixin {
+    @Redirect(method="render(Lnet/minecraft/item/equipment/EquipmentModel$LayerType;Lnet/minecraft/util/Identifier;Lnet/minecraft/client/model/Model;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/util/Identifier;)V",
+        at=@At(value="INVOKE",target="Ljava/util/function/Function;apply(Ljava/lang/Object;)Ljava/lang/Object;",ordinal=1))
+    private Object texturemixer$previewTrim(Function<Object,Sprite> getter,Object key){
+        var access=(TrimKeyAccess)key;
+        var asset=access.texturemixer$asset();
+        var texture=access.texturemixer$trim().getTexture(access.texturemixer$layer(),asset);
+        Sprite sprite=EquipmentBindings.previewTrim(asset,texture);
+        return sprite==null?getter.apply(key):sprite;
+    }
+}

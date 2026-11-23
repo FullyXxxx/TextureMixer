@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "com.fullyx.texturemixer.compat.mc12111",
+  "compatibilityLevel": "JAVA_21",
+  "client": ["PackManagerMixin","PackScreenMixin","ResourceScreenMixin","NativeReloadMixin","FireOverlayMixin","PreviewAtlasMixin","PreviewModelLayerMixin","TextureManagerAccess",
+    "EquipmentRendererMixin","EquipmentLoaderMixin","RenderLayersMixin",${deferredGuiMixins}${itemModelMixins}"FormattedFieldMixin","SpriteIdentifierMixin","PreviewStateMapMixin",
+    ${atlasManagerMixin}"CelestialSpriteMixin","TextureBindingMixin","WorldSkyMixin","SkyLayersMixin","BlockEntityScopeMixin",
+    "FluidScopeMixin","CloudRendererAccess","CloudScopeMixin","TextRendererAccess",
+    "TrimTextureMixin","TrimKeyAccess","PreviewTrimMixin","PreviewTrimLayerMixin",
+    "WornStateMixin","WornStateCaptureMixin","WornHeadMixin",
+    "GrassColorMixin","FoliageColorMixin",${pipelineMixins}"BlockColorScopeMixin","WorldColorScopeMixin","HeldMapMixin","MapDecorationMixin",${blockAtlasMixin}"ContinuityEmissiveMixin"],
+  "injectors": {"defaultRequire": 1}
+}

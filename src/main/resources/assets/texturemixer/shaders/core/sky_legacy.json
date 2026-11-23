@@ -1,0 +1,13 @@
+{
+  "vertex": "texturemixer:core/sky_immediate",
+  "fragment": "texturemixer:core/sky",
+  "samplers": [
+    {"name": "Sampler0"},
+    {"name": "DestSampler"}
+  ],
+  "uniforms": [
+    {"name": "ModelViewMat", "type": "matrix4x4", "count": 16, "values": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]},
+    {"name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]},
+    {"name": "LayerAlpha", "type": "float", "count": 1, "values": [1]}
+  ]
+}

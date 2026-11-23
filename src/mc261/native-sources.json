@@ -1,0 +1,18 @@
+{
+  "sharedSources": [
+    "com/fullyx/texturemixer/client/Generation.java",
+    "com/fullyx/texturemixer/client/PackScreenContext.java",
+    "com/fullyx/texturemixer/client/WornHeadState.java",
+    "com/fullyx/texturemixer/compat/ModMenuIntegration.java",
+    "com/fullyx/texturemixer/compat/mc12111/ContinuityEmissiveMixin.java",
+    "com/fullyx/texturemixer/sky/OptifineSkyAdapter.java",
+    "com/fullyx/texturemixer/sky/SkyScene.java",
+    "com/fullyx/texturemixer/ui/FolderFileDialog.java",
+    "com/fullyx/texturemixer/ui/PackFileDialog.java"
+  ],
+  "extraMixins": [
+    "BlockEntityStateAccess",
+    "RenderTypeAccess",
+    "PreviewMaterialMixin"
+  ]
+}

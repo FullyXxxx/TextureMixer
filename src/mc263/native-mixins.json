@@ -1,0 +1,14 @@
+{
+  "add": [
+    "BlockEntityStateAccess",
+    "RenderTypeAccess",
+    "PreviewMaterialMixin",
+    "PalettedTrimMixin"
+  ],
+  "remove": [
+    "PreviewTrimLayerMixin",
+    "PreviewTrimMixin",
+    "TrimTextureMixin",
+    "TrimKeyAccess"
+  ]
+}

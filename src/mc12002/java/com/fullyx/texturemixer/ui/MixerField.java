@@ -1,0 +1,41 @@
+package com.fullyx.texturemixer.ui;
+
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.text.Text;
+
+/** Uses the game's editing and focus behavior inside TextureMixer's own field surface. */
+public final class MixerField extends VersionedField {
+    private static final int INSET = 6;
+
+    MixerField(TextRenderer font, int x, int y, int width, int height, Text label) {
+        this(font,x,y,width,height,label,false);
+    }
+    MixerField(TextRenderer font,int x,int y,int width,int height,Text label,boolean allowFormatting) {
+        super(font, x + INSET, y + (height - 8) / 2, width - 2 * INSET, 8, label);
+        setDrawsBackground(false);
+        com.fullyx.texturemixer.client.NativeCompat.noFieldShadow(this);
+        setEditableColor(UiDraw.TEXT);
+        com.fullyx.texturemixer.client.NativeCompat.configureField(this);
+        this.allowFormatting=allowFormatting;
+        this.insetTop = (height - 8) / 2;
+        this.insetBottom = height - 8 - insetTop;
+    }
+
+    private final int insetTop, insetBottom;
+    private final boolean allowFormatting;
+    public boolean allowsFormatting(){return allowFormatting;}
+
+    @Override public boolean isMouseOver(double x, double y) {
+        return isVisible() && active && x >= getX() - INSET && x < (getX()+getWidth()) + INSET
+                && y >= getY() - insetTop && y < (getY()+getHeight()) + insetBottom;
+    }
+
+    @Override public void renderButton(DrawContext context,int mouseX,int mouseY,float delta) {
+        int x = getX() - INSET, y = getY() - insetTop;
+        int width = getWidth() + 2 * INSET, height = getHeight() + insetTop + insetBottom;
+        int border = isFocused() ? UiDraw.FOCUS : isMouseOver(mouseX, mouseY) ? 0xff777777 : 0xff535353;
+        UiDraw.frame(context, x, y, width, height, 4, 0xe8252525, border);
+        super.renderButton(context,mouseX,mouseY,delta);
+    }
+}

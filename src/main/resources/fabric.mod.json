@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "texturemixer",
+  "version": "${version}",
+  "name": "TextureMixer",
+  "description": "Mix resource packs and folder collections above server resources, with named presets for items, equipment, blocks and skies.",
+  "authors": ["FullyX"],
+  "license": "MIT",
+  "icon": "assets/texturemixer/textures/gui/icon.png",
+  "environment": "client",
+  "entrypoints": {"client": ["com.fullyx.texturemixer.TextureMixerClient"], "modmenu": ["com.fullyx.texturemixer.compat.ModMenuIntegration"]},
+  "mixins": ["texturemixer.mixins.json"],
+  "depends": {"fabricloader": ">=${loader}", "minecraft": "${minecraft}", "java": ">=${javaVersion}", "fabric-api": ">=${fabricApi}"}
+}
