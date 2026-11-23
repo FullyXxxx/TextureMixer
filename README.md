@@ -1,48 +1,56 @@
 # TextureMixer
 
-TextureMixer 是 Minecraft Java 版的 Fabric 客户端模组。可叠加多个主资源包，并按物品、方块或其他资源目标选择单独的来源。混搭方案可以保存为自定义套装。
+TextureMixer is a client-side Fabric mod for Minecraft Java Edition. Stack your usual resource packs, then choose a separate source for individual assets. You can keep your building textures, select a sword from an older pack, and use a custom sky from another pack in the same mix.
 
-*TextureMixer is a client-side Fabric mod for combining resource packs, choosing individual assets, and saving mixes as reusable presets.*
+## Features
 
-## 安装
+- **Resource pack mixing.** Arrange base packs in priority order and override individual assets. TextureMixer detects ZIP archives and unpacked packs, including packs organized into folders.
+- **Cross-version pack support.** TextureMixer adapts supported legacy asset paths. A sword texture from an older pack can be previewed and applied alongside assets from newer packs.
+- **Asset-specific replacements.** Choose sources for items, blocks, skies, weather, entities, particles, HUD elements, menus, container screens, fonts, sound effects, music, and enchantment glints.
+- **Previews before applying.** Compare sources, preview item icons and handheld or supported worn appearances, and audition sounds with a separate preview volume.
+- **Reusable mixes.** Save a combination as a **Custom Set**. Use **Undo** to step back through edits or **Reset Mix** to clear individual overrides while keeping the base pack stack.
 
-安装对应 Minecraft 版本的 Fabric Loader，把 TextureMixer 和对应版本的 Fabric API JAR 放进同一游戏实例的 mods 文件夹。Mod Menu 可选，可用于打开配置和切换 TextureMixer。加入多人游戏时，服务器无需安装本模组。
+## Installation
 
-TextureMixer 1.0.0 为 24 个 Minecraft 正式版本提供独立构建。每个游戏版本的 Java、Fabric Loader 和 Fabric API 要求见 [版本矩阵](docs/RELEASE-1.0.0.md)。
+1. Install **Fabric Loader** for the exact Minecraft version you play.
+2. Download the matching TextureMixer JAR from [GitHub Releases](https://github.com/Xyifu/TextureMixer/releases/latest) and the corresponding [Fabric API](https://modrinth.com/mod/fabric-api).
+3. Place both JARs in that game instance's `mods` directory.
 
-## 使用
+TextureMixer runs on the client in single-player and multiplayer. **Mod Menu** is optional and adds an in-game on/off control. See the [version matrix](docs/RELEASE-1.0.0.md#compatibility-matrix) for the minimum Java, Fabric Loader, and Fabric API versions for all 24 builds.
 
-1. 打开 **选项 → 资源包**，也可以使用客户端命令 /texturemixer。
-2. 在资源包页添加并排序主资源包。TextureMixer 自动识别当前实例资源包目录中的 ZIP、解压包和文件夹分组。
-3. 切换分类，搜索资源，比较不同来源的预览后选择。物品支持图标、手持和适用的穿戴预览。Block 提供方块状态预览，包括水和岩浆。
-4. 点击 **应用** 提交修改。使用 **自定义套装** 保存配置，或使用 **撤销** 回退本次编辑。
+## In-game use
 
-资源类别和已知边界见 [自定义范围](docs/CUSTOMIZATION.md)。TextureMixer 的配置和缓存保存在当前游戏实例中，来源资源包以只读方式使用。
+1. Open **Options → Resource Packs** or run the client command `/texturemixer`.
+2. Add and order your base packs.
+3. Browse or search a category, compare the previews, and select a source.
+4. Click **Apply** to load the mix. Save it under **Custom Sets** to use it again later.
 
-## 从源码构建
+TextureMixer reads source packs without modifying their files. Settings and cached resources are stored in the current game instance. See [Customization](docs/CUSTOMIZATION.md) for supported assets and format limits.
 
-安装 JDK 25 和 JDK 21，将 JAVA_HOME 指向 JDK 25。构建 Minecraft 1.20 至 1.20.4 时，还需安装 JDK 17。Gradle Wrapper 会下载 Gradle 和公开依赖。
+## Build from source
 
-| 操作 | Windows | Linux / macOS |
+Install JDK 25 and JDK 21. Set `JAVA_HOME` to JDK 25 to run Gradle. Install JDK 17 as well if you build Minecraft 1.20 through 1.20.4. The Gradle Wrapper downloads Gradle and resolves public dependencies.
+
+| Task | Windows | Linux or macOS |
 | --- | --- | --- |
-| 构建默认目标 1.21.11 并运行回归 | `gradlew.bat build` | `./gradlew build` |
-| 启动开发客户端 | `gradlew.bat runClient` | `./gradlew runClient` |
+| Build the default Minecraft 1.21.11 target and run regressions | `gradlew.bat build` | `./gradlew build` |
+| Start the development client | `gradlew.bat runClient` | `./gradlew runClient` |
 
-发布 JAR 位于 build/libs。使用 Python 3.10+ 时，可以选择其他目标：
+Binary JARs are written to `build/libs`. With Python 3.10 or later, use these commands to build specific targets.
 
 ```sh
 python tools/build_matrix.py 1.20.4 1.21.11
 python tools/build_native_port.py 26.3
 ```
 
-去掉 build_matrix.py 后的版本参数可构建全部 1.20.x、1.21.x 目标。26.x 可用 build_native_port.py 逐版本构建。两个脚本都会为输出的 JAR 生成 SHA-256。
+Run `python tools/build_matrix.py` without version arguments to build all supported 1.20.x and 1.21.x targets. Run `build_native_port.py` once per 26.x target. Both scripts generate a SHA-256 checksum for each binary.
 
-## 验证
+## Verification
 
-- Gradle 的 build 会运行核心回归。使用 python tools/build_matrix.py --audit 1.21.11 还可启动隔离客户端并验证预览像素和资源应用。
-- 26.x 实机验证脚本目前支持 Windows。传入 --audit 和 --assets-dir，再指定本机启动器的 Minecraft 资产目录。26.3 的验证参数见 [版本矩阵](docs/RELEASE-1.0.0.md)。
-- 可选的 smoke 测试使用 Pillow 生成测试资源。运行 python tools/generate_fixtures.py 后，可用 Gradle 的 runSmokeClient 任务和 -PsmokeTest 参数启动。
+- Gradle's `build` task runs the core regression suite. To launch an isolated client and verify preview pixels and applied assets, run `python tools/build_matrix.py --audit 1.21.11`.
+- The 26.x graphical audit supports Windows. Pass `--audit` and point `--assets-dir` to the launcher's Minecraft assets directory. See the [release notes](docs/RELEASE-1.0.0.md) for the 26.3 test settings.
+- For optional smoke tests, install Pillow, run `python tools/generate_fixtures.py`, and start Gradle's `runSmokeClient` task with `-PsmokeTest`.
 
-## 许可证
+## License
 
-TextureMixer 自有源码与素材采用 [MIT](LICENSE)。随附的 Barlow 字体和 Gradle Wrapper 适用各自的许可证。 [第三方声明](THIRD-PARTY-NOTICES.md)
+TextureMixer's original code and assets are licensed under [MIT](LICENSE). The bundled Barlow font and Gradle Wrapper are covered by their respective licenses. [Third-party notices](THIRD-PARTY-NOTICES.md)

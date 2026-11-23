@@ -1,60 +1,66 @@
-# TextureMixer 1.0.0 发布验证
+# TextureMixer 1.0.0 release verification
 
-验证日期为 2026-11-21。Mojang 正式版清单中，1.20.x、1.21.x、26.x 共 24 个 Minecraft Java 版本。每个游戏版本对应一份独立 Fabric 客户端 JAR，TextureMixer 版本号均为 1.0.0。
+The November 21, 2026 verification covered 24 Minecraft Java Edition releases across 1.20.x, 1.21.x, and 26.x. Each game version has its own Fabric client JAR. All builds use TextureMixer version 1.0.0. [Release downloads](https://github.com/Xyifu/TextureMixer/releases/tag/v1.0.0)
 
-## Water 与 Lava
+## Water and lava
 
-- Block 页的原版预览、来源列表和确认弹窗使用流体专用模型。顶部使用 `_still`，侧面使用 `_flow`。预览借用原有模型缓存和游戏贴图图集。
-- 静态替换图会遮盖较低优先级的动画帧表。资源包自带的 `.png.mcmeta` 随对应贴图应用，缺失的水面叠加贴图回退到原版。
-- 游戏内按流体本身匹配 Water 和 Lava 的混搭来源。1.21.11 改为替换 Fabric 最终提交给渲染器的精灵。水桶和岩浆桶可在 Item 类别单独选择。
-- 修复旧版确认弹窗的背景覆盖预览。这个修复适用于共用确认弹窗的材质类别。
+- The Block grid, source list, and confirmation dialog use a dedicated fluid preview model. The top uses the `_still` texture and the sides use the `_flow` texture. Previews use the existing model cache and the Minecraft texture atlas.
+- A static replacement texture takes precedence over animation metadata from lower-priority resources. A pack's own `.png.mcmeta` stays with its texture. A missing water overlay falls back to vanilla.
+- In-world rendering selects the mix by fluid. On Minecraft 1.21.11, TextureMixer substitutes the sprites that Fabric passes to the renderer. Water and lava buckets each have independent sources in the Item category.
+- The shared confirmation dialog keeps asset previews visible on older clients.
 
-## 实机验收
+## Client verification
 
-在独立的 Fabric 客户端和临时平坦世界运行。测试用材质包给静止和流动贴图设置了不同的可识别像素，覆盖静态岩浆和带动画元数据的流动岩浆。每个版本检查原版 Block 卡、来源卡和确认窗口的像素，并在应用后从游戏截图确认水和岩浆表面出现了所选贴图。资源快照比对覆盖四张流体贴图、流动岩浆动画元数据、原版水面叠加贴图回退和桶类选择隔离。另回归了钻石剑 Icon / Hand、钻石方块、盔甲 Worn、主世界天空、快照写入和读回、资源重载及停用。
+Tests ran in isolated Fabric clients using temporary flat worlds. A test pack used distinct colors for the still and flowing textures, including a static lava texture and a flowing lava texture with animation metadata. For each game version, screenshots verified the vanilla Block card, custom source card, confirmation dialog, and fluid surfaces shown after applying the mix.
 
-| Minecraft | Java | Fabric Loader 最低版本 | Fabric API 最低版本 | 实机结果 |
+Snapshot checks covered all four fluid textures, flowing lava animation metadata, the vanilla water overlay fallback, and separate bucket overrides. Tests also covered diamond sword inventory and hand previews, a diamond block, a worn armor preview, the Overworld sky, snapshot save and restore, resource reload, and disabling TextureMixer.
+
+## Compatibility matrix
+
+| Minecraft | Minimum Java | Minimum Fabric Loader | Minimum Fabric API | Client test |
 | --- | --- | --- | --- | --- |
-| 1.20 | 17 | 0.18.4 | 0.83.0+1.20 | 通过 |
-| 1.20.1 | 17 | 0.18.4 | 0.92.12+1.20.1 | 通过 |
-| 1.20.2 | 17 | 0.18.4 | 0.91.6+1.20.2 | 通过 |
-| 1.20.3 | 17 | 0.18.4 | 0.91.1+1.20.3 | 通过 |
-| 1.20.4 | 17 | 0.18.4 | 0.97.3+1.20.4 | 通过 |
-| 1.20.5 | 21 | 0.18.4 | 0.97.8+1.20.5 | 通过 |
-| 1.20.6 | 21 | 0.18.4 | 0.100.8+1.20.6 | 通过 |
-| 1.21 | 21 | 0.18.4 | 0.102.0+1.21 | 通过 |
-| 1.21.1 | 21 | 0.18.4 | 0.116.18+1.21.1 | 通过 |
-| 1.21.2 | 21 | 0.18.4 | 0.106.1+1.21.2 | 通过 |
-| 1.21.3 | 21 | 0.18.4 | 0.114.1+1.21.3 | 通过 |
-| 1.21.4 | 21 | 0.18.4 | 0.119.4+1.21.4 | 通过 |
-| 1.21.5 | 21 | 0.18.4 | 0.128.2+1.21.5 | 通过 |
-| 1.21.6 | 21 | 0.18.4 | 0.128.2+1.21.6 | 通过 |
-| 1.21.7 | 21 | 0.18.4 | 0.129.0+1.21.7 | 通过 |
-| 1.21.8 | 21 | 0.18.4 | 0.136.1+1.21.8 | 通过 |
-| 1.21.9 | 21 | 0.18.4 | 0.134.1+1.21.9 | 通过 |
-| 1.21.10 | 21 | 0.18.4 | 0.138.4+1.21.10 | 通过 |
-| 1.21.11 | 21 | 0.18.4 | 0.141.6+1.21.11 | 通过 |
-| 26.1 | 25 | 0.19.3 | 0.145.1+26.1 | 通过 |
-| 26.1.1 | 25 | 0.19.3 | 0.145.4+26.1.1 | 通过 |
-| 26.1.2 | 25 | 0.19.3 | 0.155.3+26.1.2 | 通过 |
-| 26.2 | 25 | 0.19.5 | 0.161.0+26.2 | 通过 |
-| 26.3 | 25 | 0.20.1 | 0.166.2+26.3 | 通过 |
+| 1.20 | 17 | 0.18.4 | 0.83.0+1.20 | Passed |
+| 1.20.1 | 17 | 0.18.4 | 0.92.12+1.20.1 | Passed |
+| 1.20.2 | 17 | 0.18.4 | 0.91.6+1.20.2 | Passed |
+| 1.20.3 | 17 | 0.18.4 | 0.91.1+1.20.3 | Passed |
+| 1.20.4 | 17 | 0.18.4 | 0.97.3+1.20.4 | Passed |
+| 1.20.5 | 21 | 0.18.4 | 0.97.8+1.20.5 | Passed |
+| 1.20.6 | 21 | 0.18.4 | 0.100.8+1.20.6 | Passed |
+| 1.21 | 21 | 0.18.4 | 0.102.0+1.21 | Passed |
+| 1.21.1 | 21 | 0.18.4 | 0.116.18+1.21.1 | Passed |
+| 1.21.2 | 21 | 0.18.4 | 0.106.1+1.21.2 | Passed |
+| 1.21.3 | 21 | 0.18.4 | 0.114.1+1.21.3 | Passed |
+| 1.21.4 | 21 | 0.18.4 | 0.119.4+1.21.4 | Passed |
+| 1.21.5 | 21 | 0.18.4 | 0.128.2+1.21.5 | Passed |
+| 1.21.6 | 21 | 0.18.4 | 0.128.2+1.21.6 | Passed |
+| 1.21.7 | 21 | 0.18.4 | 0.129.0+1.21.7 | Passed |
+| 1.21.8 | 21 | 0.18.4 | 0.136.1+1.21.8 | Passed |
+| 1.21.9 | 21 | 0.18.4 | 0.134.1+1.21.9 | Passed |
+| 1.21.10 | 21 | 0.18.4 | 0.138.4+1.21.10 | Passed |
+| 1.21.11 | 21 | 0.18.4 | 0.141.6+1.21.11 | Passed |
+| 26.1 | 25 | 0.19.3 | 0.145.1+26.1 | Passed |
+| 26.1.1 | 25 | 0.19.3 | 0.145.4+26.1.1 | Passed |
+| 26.1.2 | 25 | 0.19.3 | 0.155.3+26.1.2 | Passed |
+| 26.2 | 25 | 0.19.5 | 0.161.0+26.2 | Passed |
+| 26.3 | 25 | 0.20.1 | 0.166.2+26.3 | Passed |
 
-## 验证边界
+## Test environment and scope
 
-26.3 实机使用 NVIDIA Vulkan，隔离测试实例将 Mipmap 级别设为 0。该机器使用默认 Mipmap 级别重载资源时曾出现原生访问冲突 `0xC0000005`。移除 TextureMixer 后，用标准资源包重放同一批生成资产并调用原版重载接口，复现了相同退出码。OpenGL 基线也复现过原生启动崩溃。Mipmap 设置只改在隔离测试实例。
+Minecraft 26.3 was verified on NVIDIA Vulkan with mipmapping level 0 in the isolated test instance. With the default mipmapping setting, the same machine encountered native access violation `0xC0000005` while reloading resources. A replay using a standard resource pack reproduced the exit code with TextureMixer removed. The OpenGL baseline also encountered a native startup crash.
 
-世界截图覆盖所选资源应用后的水和岩浆表面。动画元数据纳入快照校验。1.20 至 1.21.3 的水预览采用贴图原始色值，原版水在这些版本的卡片中呈灰度，世界内的水仍按生物群系着色。含水方块、第三方流体、服务器下发资源包和 Lunar 没有纳入本轮逐版本实机矩阵。1.20.x 和 1.21.x 使用 Loom 隔离客户端运行，并独立校验发布 JAR。26.x 的验收客户端直接加载发布 JAR。
+The in-world screenshots cover water and lava surfaces. Snapshot checks include animation metadata. On Minecraft 1.20 through 1.21.3, the editor shows water in the texture's original colors, so vanilla water appears grayscale in the card. In-world water uses biome tinting. This matrix covers standard fluids in isolated clients. Waterlogged blocks, third-party fluids, server-delivered packs, and Lunar Client fall outside that matrix.
 
-## MIT 源码整理复测
+The 1.20.x and 1.21.x tests used isolated Loom clients with separate checks of their release JARs. The 26.x test clients loaded the release JARs directly.
 
-2026-11-23 重新构建并检查了全部 24 份 JAR 的版本、MIT 声明、许可文本、字体声明和 SHA-256。1.20.4、1.21.11、26.1.2 和 26.3 抽样复跑隔离客户端，验证从已安装的 Minecraft 素材读取中文名称、混搭预览、流体渲染和保存恢复。26.3 复测使用 NVIDIA Vulkan 与 Mipmap 0。
+## MIT source publication retest
 
-在 1.21.11 中另验证了一份 1.8.9 格式的自制资源包。旧版目录中的钻石剑贴图在来源列表里可预览，应用后从 Minecraft 当前资源管理器读取的贴图与来源文件逐字节一致。
+On November 23, 2026, all 24 JARs were rebuilt and checked for version metadata, the MIT declaration and full license text, font notices, and SHA-256 checksums. Minecraft 1.20.4, 1.21.11, 26.1.2, and 26.3 were retested in isolated clients. The retest covered Chinese name lookup from installed Minecraft assets, mix previews, fluid rendering, and saving and restoring a mix. The 26.3 retest used NVIDIA Vulkan with mipmapping level 0.
 
-## 从源码构建
+An additional Minecraft 1.21.11 test used a custom pack with a legacy resource layout. The editor previewed the sword from that source. After the mix was applied, Minecraft's active resource manager returned a byte-for-byte match for the source texture.
 
-使用 JDK 25 启动构建工具。按目标安装 JDK 17 或 21，以运行相应的 Gradle 回归或开发客户端。
+## Build from source
+
+Use JDK 25 to run the build tools. Install JDK 17 or 21 as required by the target for Gradle regressions and development clients.
 
 ```sh
 python tools/build_matrix.py
@@ -65,6 +71,6 @@ python tools/build_native_port.py 26.2
 python tools/build_native_port.py 26.3
 ```
 
-26.3 可在 Windows 的隔离测试实例中传入 --audit --backend vulkan --mipmap-levels 0，并用 --assets-dir 指定 Minecraft 资产目录。 [构建与验证说明](../README.md#从源码构建)
+To run the isolated Minecraft 26.3 audit on Windows, pass `--audit --backend vulkan --mipmap-levels 0` and use `--assets-dir` to point to your Minecraft assets directory. [Build and verification instructions](../README.md#build-from-source)
 
-[Mojang Java Edition 正式版本清单](https://piston-meta.mojang.com/mc/game/version_manifest_v2.json) · [Fabric API 官方 Maven](https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml)
+[Mojang Java Edition version manifest](https://piston-meta.mojang.com/mc/game/version_manifest_v2.json) · [Fabric API Maven metadata](https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml)

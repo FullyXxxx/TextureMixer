@@ -1,21 +1,21 @@
-# TextureMixer 自定义范围
+# Customization
 
-| 类别 | 可单独选择的资源 |
+| Category | Resources that can be selected independently |
 | --- | --- |
-| Item | 原版物品模型与贴图。预览包括图标、手持和支持的穿戴外观 |
-| Block | 原版方块模型、方块状态、支持的方块实体资源以及水和岩浆 |
-| Sky | Overworld Sky、End Sky、Rain & Snow，以及支持的 OptiFine 天空图层 |
-| Entity、Particle | 原版实体贴图、原生粒子及其贴图序列 |
-| HUD、Menu、Container GUI | 各类已列入目录的 HUD、屏幕覆盖、菜单及容器界面素材 |
-| Sound & Music | 声音事件、音效试听和音量调节 |
-| Enchant | 物品与盔甲的附魔光效贴图 |
-| Font | 原生字体资源与自定义测试文本预览 |
+| Item | Vanilla item models and textures, with inventory, handheld, and supported worn previews |
+| Block | Vanilla block models, block states, supported block entity resources, and water and lava textures |
+| Sky | Overworld sky, End sky, rain and snow, and supported OptiFine sky layers |
+| Entity and Particle | Vanilla entity textures, particle definitions, and their texture sequences |
+| HUD, Menu, and Container GUI | Cataloged HUD elements, screen overlays, menus, and container interface assets |
+| Sound & Music | Sound events, with playback previews and a separate preview volume |
+| Enchant | Item and armor enchantment glint textures |
+| Font | Native font resources with customizable sample text in the preview |
 
-主资源包可以叠加。单项选择优先于主资源包，所选来源缺失的资源使用原版作为参照。未提供独立目标的素材可随主包加载。
+Base packs can be stacked. An individual override takes priority over the base stack. The editor can show the vanilla appearance when the selected source lacks an asset. Assets without an individual override target can still load through a base pack.
 
-## 已知边界
+## Format and feature limits
 
-- 当前目标目录以原版资源为主，完整 CIT、CTM、CEM、任意模组资产与着色器配置仍取决于对应的游戏或兼容模组。
-- Sky 可读取受支持的 OptiFine 图层。银河和极光由资源包提供图像，覆盖范围取决于包内的贴图和条件。
-- 同一物品选择整套原生模型资源。附魔、拉弓和弩装填等受支持条件仍由 Minecraft 处理，穿戴预览需要进入世界。
-- 直接绘制贴图、编辑模型或改变服务器游戏规则不在本模组的范围内。
+- The asset catalog focuses on vanilla resources. Support for CIT, CTM, CEM, custom mod assets, and shaders depends on the format and the game or companion mods that handle it.
+- The Sky category reads supported OptiFine layers. Effects such as galaxies and auroras come from the pack's images and appearance conditions.
+- An item choice selects the source's native model resources. Minecraft handles supported conditions such as enchantments, drawing a bow, and loading a crossbow. Worn previews require an open world.
+- TextureMixer combines existing resources and the client renders the result. Use a separate editor to paint textures or edit models.
