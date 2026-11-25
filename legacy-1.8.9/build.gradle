@@ -1,0 +1,38 @@
+plugins {
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+    id 'legacy-looming' version "${loom_version}"
+}
+
+group = 'com.fullyx'
+version = "${mod_version}+${minecraft_version}"
+base { archivesName = 'TextureMixer' }
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings(legacy.yarn(minecraft_version, yarn_build))
+    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+    withSourcesJar()
+}
+tasks.withType(JavaCompile).configureEach {
+    options.release = 8
+    options.encoding = 'UTF-8'
+}
+tasks.withType(JavaExec).configureEach {
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(8) }
+}
+
+processResources {
+    inputs.property('version', project.version)
+    filesMatching('fabric.mod.json') { expand version: project.version }
+    from('../src/main/resources/assets/texturemixer/textures/gui/icon.png') {
+        into 'assets/texturemixer'
+    }
+}
+tasks.withType(Jar).configureEach {
+    from('../LICENSE') { into 'META-INF' }
+}

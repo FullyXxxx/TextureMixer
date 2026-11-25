@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "texturemixer",
+  "version": "${version}",
+  "name": "TextureMixer",
+  "description": "Mix individual assets from multiple resource packs in Minecraft 1.8.9.",
+  "authors": ["FullyX"],
+  "license": "MIT",
+  "icon": "assets/texturemixer/icon.png",
+  "environment": "client",
+  "mixins": ["texturemixer.legacy.mixins.json"],
+  "depends": {"fabricloader": ">=0.18.4", "minecraft": "1.8.9", "java": ">=8"}
+}

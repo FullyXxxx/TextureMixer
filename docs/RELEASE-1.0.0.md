@@ -1,6 +1,8 @@
 # TextureMixer 1.0.0 release verification
 
-The November 21, 2026 verification covered 24 Minecraft Java Edition releases across 1.20.x, 1.21.x, and 26.x. Each game version has its own Fabric client JAR. All builds use TextureMixer version 1.0.0. [Release downloads](https://github.com/Xyifu/TextureMixer/releases/tag/v1.0.0)
+The November 21, 2026 verification covered 24 Minecraft Java Edition releases across 1.20.x, 1.21.x, and 26.x. Each game version has its own Fabric client JAR. All builds use TextureMixer version 1.0.0. [Release downloads](https://github.com/FullyXxxx/TextureMixer/releases/tag/v1.0.0)
+
+The [Minecraft 1.8.9 edition](../legacy-1.8.9/README.md) has a separate build, installation guide, and verification record.
 
 ## Water and lava
 

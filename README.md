@@ -12,13 +12,19 @@ TextureMixer is a client-side Fabric mod for Minecraft Java Edition. Stack your 
 
 ## Installation
 
+For **Minecraft 1.8.9**, use the [Legacy Fabric edition](legacy-1.8.9/README.md). It has its own [release download](https://github.com/FullyXxxx/TextureMixer/releases/tag/v1.0.0-mc1.8.9).
+
+For Minecraft 1.20.x, 1.21.x, and 26.x:
+
 1. Install **Fabric Loader** for the exact Minecraft version you play.
-2. Download the matching TextureMixer JAR from [GitHub Releases](https://github.com/Xyifu/TextureMixer/releases/latest) and the corresponding [Fabric API](https://modrinth.com/mod/fabric-api).
+2. Download the matching TextureMixer JAR from [GitHub Releases](https://github.com/FullyXxxx/TextureMixer/releases/latest) and the corresponding [Fabric API](https://modrinth.com/mod/fabric-api).
 3. Place both JARs in that game instance's `mods` directory.
 
-TextureMixer runs on the client in single-player and multiplayer. **Mod Menu** is optional and adds an in-game on/off control. See the [version matrix](docs/RELEASE-1.0.0.md#compatibility-matrix) for the minimum Java, Fabric Loader, and Fabric API versions for all 24 builds.
+TextureMixer runs on the client in single-player and multiplayer. **Mod Menu** is optional and adds an in-game on/off control. See the [version matrix](docs/RELEASE-1.0.0.md#compatibility-matrix) for the minimum Java, Fabric Loader, and Fabric API versions for the 24 builds in these series.
 
 ## In-game use
+
+For the 1.8.9 interface, see the [Legacy Fabric guide](legacy-1.8.9/README.md#use-texturemixer).
 
 1. Open **Options → Resource Packs** or run the client command `/texturemixer`.
 2. Add and order your base packs.
@@ -28,6 +34,8 @@ TextureMixer runs on the client in single-player and multiplayer. **Mod Menu** i
 TextureMixer reads source packs without modifying their files. Settings and cached resources are stored in the current game instance. See [Customization](docs/CUSTOMIZATION.md) for supported assets and format limits.
 
 ## Build from source
+
+For Minecraft 1.8.9, see the [standalone Legacy Fabric build](legacy-1.8.9/README.md#build-from-source).
 
 Install JDK 25 and JDK 21. Set `JAVA_HOME` to JDK 25 to run Gradle. Install JDK 17 as well if you build Minecraft 1.20 through 1.20.4. The Gradle Wrapper downloads Gradle and resolves public dependencies.
 
