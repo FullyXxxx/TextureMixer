@@ -4,6 +4,7 @@ import static com.fullyx.texturemixer.core.UiLanguage.tr;
 
 import com.fullyx.texturemixer.core.MixerConfig;
 import com.fullyx.texturemixer.core.SearchQuery;
+import com.fullyx.texturemixer.ui.shared.MixerLayout;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.text.Text;
@@ -13,7 +14,8 @@ import java.util.List;
 /** Available and selected packs stay visible together, with dedicated row actions. */
 final class PackPane implements AutoCloseable {
     private record Entry(String id, boolean folder) {}
-    private static final int ROW_HEIGHT = 30, COLUMN_GAP = 8, ACTION_WIDTH = 16, ACTION_STEP = 18;
+    private static final int ROW_HEIGHT = MixerLayout.PACK_ROW, COLUMN_GAP = MixerLayout.PACK_GAP,
+            ACTION_WIDTH = MixerLayout.PACK_ACTION_WIDTH, ACTION_STEP = MixerLayout.PACK_ACTION_STEP;
     private final MixerScreen parent;
     private final List<FlatButton> rows = new ArrayList<>();
     private PackIcons icons;

@@ -1,18 +1,19 @@
 package com.fullyx.texturemixer.ui;
 
+import com.fullyx.texturemixer.ui.shared.MixerLayout;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.font.TextRenderer;
 
 /** Small native geometry; motion uses wall time and never delays an action or changes hitboxes. */
 public final class UiDraw {
-    static final int TEXT = 0xfff2f2f2;
-    static final int SECONDARY = 0xffc0c0c0;
-    static final int DISABLED = 0xff969696;
-    static final int DETAIL = 0x70202020;
-    static final int DIVIDER = 0x497c7c7c;
-    static final int FOCUS = 0xffdedede;
+    static final int TEXT = MixerLayout.TEXT;
+    static final int SECONDARY = MixerLayout.SECONDARY;
+    static final int DISABLED = MixerLayout.DISABLED;
+    static final int DETAIL = MixerLayout.DETAIL;
+    static final int DIVIDER = MixerLayout.DIVIDER;
+    static final int FOCUS = MixerLayout.FOCUS;
     static final int DIALOG_SHADE = 0x99000000;
-    static final int CONTROL = 18;
+    static final int CONTROL = MixerLayout.CONTROL;
 
     enum Symbol { ADD, REMOVE, UP, DOWN, LEFT, RIGHT, CLOSE, FOLDER }
 
@@ -73,70 +74,16 @@ public final class UiDraw {
         if(width>0&&height>0&&(color>>>24)!=0)ctx.fill(x,y,x+width,y+height,color);
     }
     public static void window(DrawContext context,int x,int y,int width,int height){
-        frame(context,x,y,width,height,8,0xe0323232,0x927d7d7d);
+        frame(context,x,y,width,height,MixerLayout.RADIUS,MixerLayout.WINDOW,MixerLayout.WINDOW_BORDER);
     }
     static void frame(DrawContext context, int x, int y, int width, int height, int radius, int fill, int border) {
-        if (width<3||height<3) return;
-        radius=Math.clamp(radius,1,Math.min(width,height)/2);
-        panel(context,x+1,y+radius,width-2,height-2*radius,fill);
-        panel(context,x,y+radius,1,height-2*radius,border);
-        panel(context,x+width-1,y+radius,1,height-2*radius,border);
-        for(int row=0;row<radius;row++){
-            int outer=cornerInset(radius,row);
-            int inner=row==0?(width+1)/2:1+cornerInset(radius-1,row-1);
-            frameRow(context,x,y+row,width,outer,inner,fill,border);
-            frameRow(context,x,y+height-row-1,width,outer,inner,fill,border);
-        }
+        MixerLayout.frame(context::fill, x, y, width, height, radius, fill, border);
     }
-    private static void frameRow(DrawContext context,int x,int y,int width,int outer,int inner,int fill,int border){
-        if(width<=2*inner){
-            panel(context,x+outer,y,width-2*outer,1,border);
-            return;
-        }
-        panel(context,x+outer,y,inner-outer,1,border);
-        panel(context,x+inner,y,width-2*inner,1,fill);
-        panel(context,x+width-inner,y,inner-outer,1,border);
-    }
-    private static int cornerInset(int radius,int row){
-        double distance=radius-row-.5;
-        return (int)Math.ceil(radius-Math.sqrt(radius*radius-distance*distance));
-    }
-    static void rounded(DrawContext context,int x,int y,int width,int height,int radius,int color){
-        if(width<=0||height<=0||(color>>>24)==0)return;
-        radius=Math.min(radius,Math.min(width,height)/2);
-        context.fill(x,y+radius,x+width,y+height-radius,color);
-        for(int row=0;row<radius;row++){
-            int inset=cornerInset(radius,row);
-            context.fill(x+inset,y+row,x+width-inset,y+row+1,color);
-            context.fill(x+inset,y+height-row-1,x+width-inset,y+height-row,color);
-        }
+    static void rounded(DrawContext context, int x, int y, int width, int height, int radius, int color) {
+        MixerLayout.rounded(context::fill, x, y, width, height, radius, color);
     }
     static void symbol(DrawContext context, Symbol symbol, int x, int y, int color) {
-        switch (symbol) {
-            case ADD, REMOVE -> {
-                context.fill(x - 3, y, x + 4, y + 1, color);
-                if (symbol == Symbol.ADD) context.fill(x, y - 3, x + 1, y + 4, color);
-            }
-            case LEFT, RIGHT, UP, DOWN -> {
-                int direction = symbol == Symbol.LEFT || symbol == Symbol.UP ? -1 : 1;
-                for (int offset = -3; offset <= 3; offset++) {
-                    int tip = direction * (2 - Math.abs(offset));
-                    if (symbol == Symbol.LEFT || symbol == Symbol.RIGHT)
-                        context.fill(x + tip, y + offset, x + tip + 1, y + offset + 1, color);
-                    else context.fill(x + offset, y + tip, x + offset + 1, y + tip + 1, color);
-                }
-            }
-            case CLOSE -> {
-                for (int i = -2; i <= 2; i++) {
-                    context.fill(x + i, y + i, x + i + 1, y + i + 1, color);
-                    context.fill(x + i, y - i, x + i + 1, y - i + 1, color);
-                }
-            }
-            case FOLDER -> {
-                context.fill(x - 6, y - 5, x - 1, y - 3, color);
-                rounded(context, x - 6, y - 3, 13, 9, 2, color);
-            }
-        }
+        MixerLayout.symbol(context::fill, MixerLayout.Symbol.valueOf(symbol.name()), x, y, color);
     }
     public static void outline(DrawContext ctx,int x,int y,int width,int height,int color){
         ctx.fill(x,y,x+width,y+1,color);ctx.fill(x,y+height-1,x+width,y+height,color);

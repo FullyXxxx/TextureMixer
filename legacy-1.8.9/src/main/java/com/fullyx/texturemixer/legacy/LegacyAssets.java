@@ -55,12 +55,14 @@ final class LegacyAssets {
         final String name;
         final boolean folder;
         private final Map<String, String> entries;
+        private final String prefix;
 
-        private Pack(Path path, String name, boolean folder, Map<String, String> entries) {
+        private Pack(Path path, String name, boolean folder, Map<String, String> entries, String prefix) {
             this.path = path;
             this.name = name;
             this.folder = folder;
             this.entries = entries;
+            this.prefix = prefix;
         }
 
         boolean contains(String key) {
@@ -70,8 +72,21 @@ final class LegacyAssets {
         byte[] read(String key) throws IOException {
             String entry = entries.get(key);
             if (entry == null) return null;
+            return readEntry(entry);
+        }
+
+        byte[] icon() throws IOException {
+            return readEntry(prefix + "pack.png");
+        }
+
+        LegacyBasePack basePack() {
+            return new LegacyBasePack(path, name, folder, entries, prefix);
+        }
+
+        private byte[] readEntry(String entry) throws IOException {
             if (folder) {
                 Path file = path.resolve(entry).normalize();
+                if (!Files.isRegularFile(file)) return null;
                 if (!file.toRealPath().startsWith(path.toRealPath())) throw new IOException("Resource outside " + name);
                 try (InputStream stream = Files.newInputStream(file)) {
                     return bytes(stream);
@@ -79,7 +94,8 @@ final class LegacyAssets {
             }
             try (ZipFile zip = new ZipFile(path.toFile())) {
                 ZipEntry file = zip.getEntry(entry);
-                if (file == null || file.getSize() > MAX_BYTES) throw new IOException("Cannot read " + entry);
+                if (file == null) return null;
+                if (file.getSize() > MAX_BYTES) throw new IOException("Cannot read " + entry);
                 try (InputStream stream = zip.getInputStream(file)) {
                     return bytes(stream);
                 }
@@ -135,7 +151,7 @@ final class LegacyAssets {
                 index(entries, relative, relative);
             }
         }
-        return new Pack(path, name, true, entries);
+        return new Pack(path, name, true, entries, "");
     }
 
     private static Pack archive(Path path, String name) throws IOException {
@@ -160,7 +176,8 @@ final class LegacyAssets {
                 }
             }
         }
-        return new Pack(path, name, false, entries.isEmpty() ? wrappedEntries : entries);
+        if (!entries.isEmpty() || wrappedEntries.isEmpty()) return new Pack(path, name, false, entries, "");
+        return new Pack(path, name, false, wrappedEntries, wrapper + "/");
     }
 
     private static void index(Map<String, String> entries, String source, String original) {

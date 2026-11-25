@@ -54,10 +54,13 @@ public final class LegacyMixer {
     private final Path config;
     private final Path packDirectory;
     private final List<Target> targets;
+    private final LegacyNames names;
     private final DefaultResourcePack vanilla;
 
     private List<Pack> packs = Collections.emptyList();
-    private List<ResourcePack> basePacks = Collections.emptyList();
+    private Map<String, Pack> byName = Collections.emptyMap();
+    private List<ResourcePack> underlyingPacks = Collections.emptyList();
+    private List<LegacyBasePack> activePacks = Collections.emptyList();
     private State state;
     private Map<String, byte[]> overlay = Collections.emptyMap();
     private Map<String, byte[]> restoreOverlay;
@@ -67,6 +70,9 @@ public final class LegacyMixer {
     private static final class State {
         Map<String, String> selection = new LinkedHashMap<>();
         Map<String, Map<String, String>> sets = new LinkedHashMap<>();
+        List<String> stack;
+        Map<String, List<String>> setStacks = new LinkedHashMap<>();
+        boolean chinese;
     }
 
     public static LegacyMixer get(MinecraftClient client) {
@@ -81,6 +87,7 @@ public final class LegacyMixer {
         this.vanilla = ((MinecraftAccessor) client).texturemixer$defaultPack();
         this.state = readState();
         this.targets = LegacyAssets.catalog(vanillaPaths());
+        this.names = new LegacyNames(vanilla, targets);
     }
 
     private Iterable<String> vanillaPaths() {
@@ -117,7 +124,10 @@ public final class LegacyMixer {
         if (Files.isRegularFile(config)) {
             try (Reader reader = Files.newBufferedReader(config, StandardCharsets.UTF_8)) {
                 State saved = GSON.fromJson(reader, State.class);
-                if (saved != null && saved.selection != null && saved.sets != null) return saved;
+                if (saved != null && saved.selection != null && saved.sets != null) {
+                    if (saved.setStacks == null) saved.setStacks = new LinkedHashMap<>();
+                    return saved;
+                }
             } catch (IOException | RuntimeException error) {
                 LOG.warn("Could not read TextureMixer settings", error);
             }
@@ -141,24 +151,44 @@ public final class LegacyMixer {
     }
 
     void refresh() throws IOException {
-        packs = LegacyAssets.scan(packDirectory, LOG::warn);
+        setPacks(scan());
+    }
+
+    List<Pack> scan() throws IOException {
+        return LegacyAssets.scan(packDirectory, LOG::warn);
+    }
+
+    void setPacks(List<Pack> discovered) {
+        packs = discovered;
+        Map<String, Pack> catalog = new LinkedHashMap<>();
+        for (Pack pack : packs) catalog.put(pack.name, pack);
+        byName = catalog;
     }
 
     List<Target> targets() {
         return targets;
     }
 
-    List<Pack> sources(Target target) {
-        List<Pack> sources = new ArrayList<>();
-        for (Pack pack : packs) {
-            for (String path : target.paths) {
-                if (pack.contains(path)) {
-                    sources.add(pack);
-                    break;
-                }
-            }
+    String name(Target target, boolean chinese) { return names.name(target, chinese); }
+
+    List<Pack> packs() { return packs; }
+    Pack pack(String id) { return byName.get(id); }
+    Path packDirectory() { return packDirectory; }
+
+    List<String> stack() {
+        if (state.stack != null) return new ArrayList<>(state.stack);
+        List<String> names = new ArrayList<>();
+        for (net.minecraft.client.resource.ResourcePackLoader.Entry entry : client.getResourcePackLoader().getSelectedResourcePacks()) {
+            names.add(entry.getName());
         }
-        return sources;
+        Collections.reverse(names);
+        return names;
+    }
+
+    byte[] vanillaIcon() throws IOException {
+        try (InputStream stream = DefaultResourcePack.class.getResourceAsStream("/pack.png")) {
+            return stream == null ? null : LegacyAssets.bytes(stream);
+        }
     }
 
     Map<String, String> selection() {
@@ -174,41 +204,76 @@ public final class LegacyMixer {
         return saved == null ? Collections.emptyMap() : new LinkedHashMap<>(saved);
     }
 
-    void save(String name, Map<String, String> selection) throws IOException {
+    List<String> setStack(String name, List<String> fallback) {
+        return new ArrayList<>(state.setStacks.getOrDefault(name, fallback));
+    }
+
+    void save(String name, Map<String, String> selection, List<String> stack) throws IOException {
         Map<String, String> previous = state.sets.put(name, new LinkedHashMap<>(selection));
+        List<String> previousStack = state.setStacks.put(name, new ArrayList<>(stack));
         try {
             writeState();
         } catch (IOException error) {
             if (previous == null) state.sets.remove(name);
             else state.sets.put(name, previous);
+            if (previousStack == null) state.setStacks.remove(name);
+            else state.setStacks.put(name, previousStack);
             throw error;
         }
     }
 
-    byte[] preview(Target target, Pack pack, boolean vanillaOnly) throws IOException {
+    void deleteSet(String name) throws IOException {
+        Map<String, String> selection = state.sets.remove(name);
+        List<String> stack = state.setStacks.remove(name);
+        try {
+            writeState();
+        } catch (IOException error) {
+            if (selection != null) state.sets.put(name, selection);
+            if (stack != null) state.setStacks.put(name, stack);
+            throw error;
+        }
+    }
+
+    boolean chinese() { return state.chinese; }
+
+    void setChinese(boolean chinese) throws IOException {
+        boolean previous = state.chinese;
+        state.chinese = chinese;
+        try {
+            writeState();
+        } catch (IOException error) {
+            state.chinese = previous;
+            throw error;
+        }
+    }
+
+    byte[] preview(Target target, String source, List<String> stack) throws IOException {
         for (String path : target.paths) {
-            if (pack != null) {
-                byte[] selected = pack.read(path);
+            Pack pack = byName.get(source);
+            if (source != null) {
+                byte[] selected = pack == null ? null : pack.read(path);
                 if (selected != null) return selected;
-            } else if (vanillaOnly) {
-                Identifier id = new Identifier("minecraft", path);
-                if (vanilla.contains(id)) {
-                    try (InputStream stream = vanilla.open(id)) {
-                        return LegacyAssets.bytes(stream);
-                    }
-                }
             } else {
+                for (String id : stack) {
+                    Pack basePack = byName.get(id);
+                    byte[] data = basePack == null ? null : basePack.read(path);
+                    if (data != null) return data;
+                }
                 byte[] base = basePreview(path);
                 if (base != null) return base;
             }
+        }
+        for (String path : target.paths) {
+            byte[] vanilla = vanillaBytes(path);
+            if (vanilla != null) return vanilla;
         }
         return null;
     }
 
     private byte[] basePreview(String path) throws IOException {
         Identifier id = new Identifier("minecraft", path);
-        for (int i = basePacks.size() - 1; i >= 0; i--) {
-            ResourcePack pack = basePacks.get(i);
+        for (int i = underlyingPacks.size() - 1; i >= 0; i--) {
+            ResourcePack pack = underlyingPacks.get(i);
             if (pack.contains(id)) {
                 try (InputStream stream = pack.open(id)) {
                     return LegacyAssets.bytes(stream);
@@ -219,8 +284,6 @@ public final class LegacyMixer {
     }
 
     private Map<String, byte[]> compile(Map<String, String> selection, boolean restoring) throws IOException {
-        Map<String, Pack> byName = new LinkedHashMap<>();
-        for (Pack pack : packs) byName.put(pack.name, pack);
         Map<String, byte[]> result = new LinkedHashMap<>();
         long size = 0;
         for (Target target : targets) {
@@ -235,9 +298,11 @@ public final class LegacyMixer {
             boolean present = false;
             for (String path : target.paths) {
                 byte[] data = source == null ? vanillaBytes(path) : source.read(path);
+                boolean supplied = data != null && source != null;
+                if (data == null) data = vanillaBytes(path);
                 if (data == null) continue;
                 present = true;
-                byte[] metadata = source == null ? vanillaBytes(path + ".mcmeta") : source.read(path + ".mcmeta");
+                byte[] metadata = supplied ? source.read(path + ".mcmeta") : vanillaBytes(path + ".mcmeta");
                 if (path.endsWith(".png")) {
                     try {
                         image(data, 1);
@@ -300,10 +365,15 @@ public final class LegacyMixer {
         }
     }
 
-    void apply(Map<String, String> selection) throws IOException {
+    void apply(Map<String, String> selection, List<String> stack) throws IOException {
         refresh();
+        for (String pack : stack) {
+            if (!byName.containsKey(pack)) throw new IOException("Source pack missing: " + pack);
+        }
         Map<String, byte[]> compiled = compile(selection, false);
         Map<String, String> previous = state.selection;
+        List<String> previousStack = state.stack;
+        state.stack = new ArrayList<>(stack);
         restoreOverlay = overlay;
         overlay = compiled;
         reloadFailure = null;
@@ -314,6 +384,7 @@ public final class LegacyMixer {
             writeState();
         } catch (IOException | RuntimeException error) {
             state.selection = previous;
+            state.stack = previousStack;
             overlay = restoreOverlay;
             try {
                 client.reloadResources();
@@ -327,11 +398,14 @@ public final class LegacyMixer {
     }
 
     public void reload(ReloadableResourceManager manager, List<ResourcePack> packs) {
-        basePacks = new ArrayList<>(packs);
+        underlyingPacks = new ArrayList<>(packs);
+        for (net.minecraft.client.resource.ResourcePackLoader.Entry entry : client.getResourcePackLoader().getSelectedResourcePacks()) {
+            underlyingPacks.remove(entry.getResourcePack());
+        }
         if (!loaded) {
             loaded = true;
             try {
-                if (!state.selection.isEmpty()) {
+                if (!state.selection.isEmpty() || state.stack != null) {
                     refresh();
                     overlay = compile(state.selection, true);
                 }
@@ -339,24 +413,45 @@ public final class LegacyMixer {
                 LOG.warn("Could not restore the saved mix", error);
             }
         }
-        if (overlay.isEmpty()) {
-            manager.reload(packs);
-            return;
+        List<LegacyBasePack> opened = new ArrayList<>();
+        List<ResourcePack> effective = new ArrayList<>(state.stack == null ? packs : underlyingPacks);
+        if (state.stack != null) {
+            for (int index = state.stack.size() - 1; index >= 0; index--) {
+                Pack pack = byName.get(state.stack.get(index));
+                if (pack != null) {
+                    LegacyBasePack base = pack.basePack();
+                    opened.add(base);
+                    effective.add(base);
+                }
+            }
         }
+        if (!overlay.isEmpty()) effective.add(new OverlayPack(overlay));
         try {
-            manager.reload(withOverlay(packs, overlay));
+            manager.reload(effective);
         } catch (RuntimeException failure) {
+            closePacks(opened);
+            if (state.stack == null && overlay.isEmpty()) throw failure;
             reloadFailure = failure;
             LOG.warn("Could not reload TextureMixer resources", failure);
-            overlay = restoreOverlay == null ? Collections.emptyMap() : restoreOverlay;
-            manager.reload(withOverlay(packs, overlay));
+            manager.reload(packs);
+            closePacks(activePacks);
+            activePacks = Collections.emptyList();
+            if (restoreOverlay == null) overlay = Collections.emptyMap();
+            return;
         }
+        closePacks(activePacks);
+        activePacks = opened;
+        packs.clear();
+        packs.addAll(effective);
     }
 
-    private static List<ResourcePack> withOverlay(List<ResourcePack> packs, Map<String, byte[]> resources) {
-        if (resources.isEmpty()) return packs;
-        List<ResourcePack> result = new ArrayList<>(packs);
-        result.add(new OverlayPack(resources));
-        return result;
+    private static void closePacks(List<LegacyBasePack> packs) {
+        for (LegacyBasePack pack : packs) {
+            try {
+                pack.close();
+            } catch (IOException error) {
+                LOG.warn("Could not close {}", pack.getName(), error);
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.fullyx.texturemixer.ui;
 
 import static com.fullyx.texturemixer.core.UiLanguage.tr;
 import com.fullyx.texturemixer.client.UiFonts;
+import com.fullyx.texturemixer.ui.shared.MixerLayout;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.tooltip.Tooltip;
@@ -33,9 +34,7 @@ public class FlatButton extends VersionedButton {
     @Override public void drawIcon(DrawContext ctx,int mouseX,int mouseY,float delta){
         boolean highlighted = active && isHovered();
         boolean light = primary && active;
-        int fill = light ? (highlighted ? 0xffededed : 0xffd7d7d7)
-                : !active ? (quiet ? 0 : 0x70414141)
-                : selected ? 0xff646464 : highlighted ? 0xff575757 : quiet ? 0 : 0xe4474747;
+        int fill = MixerLayout.buttonFill(active,highlighted,selected,quiet,primary);
         if (isFocused()) UiDraw.frame(ctx,getX(),getY(),getWidth(),getHeight(),4,fill,light?0xff8a8a8a:UiDraw.FOCUS);
         else UiDraw.rounded(ctx,getX(),getY(),getWidth(),getHeight(),4,fill);
 

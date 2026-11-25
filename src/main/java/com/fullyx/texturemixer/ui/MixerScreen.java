@@ -1,4 +1,5 @@
 package com.fullyx.texturemixer.ui;
+import com.fullyx.texturemixer.ui.shared.MixerLayout;
 
 import static com.fullyx.texturemixer.core.UiLanguage.tr;
 
@@ -253,9 +254,9 @@ public final class MixerScreen extends MixerBaseScreen {
     private void savePage(){queries.put(page(),query);scrolls.put(page(),scroll);}
     private void loadPage(){query=queries.getOrDefault(page(),"");scroll=scrolls.getOrDefault(page(),0.0);scrollTarget=scroll;lastRows=-1;}
     @Override protected void init(){
-        var window=UiDraw.Window.centered(width,height,Math.min(560,Math.max(312,width*4/5)),Math.min(330,Math.max(222,height*4/5)));
+        var window=UiDraw.Window.centered(width,height,MixerLayout.windowWidth(width),MixerLayout.windowHeight(height));
         panelWidth=window.width();panelHeight=window.height();left=window.x();top=window.y();
-        contentLeft=left+10;contentWidth=panelWidth-20;
+        contentLeft=left+MixerLayout.INSET;contentWidth=panelWidth-2*MixerLayout.INSET;
         tile=panelWidth<400||panelHeight<245?34:40;
         rowHeight=tile+24;
         columns=Math.max(1,(contentWidth-10)/(tile+9));
@@ -366,19 +367,9 @@ public final class MixerScreen extends MixerBaseScreen {
         }
     }
     private int navigationCapacity(){
-        int all=0;
-        for(int index=0;index<PAGE_COUNT;index++)all+=textRenderer.getWidth(navigationLabel(index))+12;
-        if(all<=contentWidth)return PAGE_COUNT;
-        for(int count=PAGE_COUNT-1;count>1;count--){
-            int widest=0;
-            for(int start=0;start<=PAGE_COUNT-count;start++){
-                int required=0;
-                for(int index=start;index<start+count;index++)required+=textRenderer.getWidth(navigationLabel(index))+12;
-                widest=Math.max(widest,required);
-            }
-            if(widest<=contentWidth-36)return count;
-        }
-        return 1;
+        int[] widths=new int[PAGE_COUNT];
+        for(int index=0;index<PAGE_COUNT;index++)widths[index]=textRenderer.getWidth(navigationLabel(index))+12;
+        return MixerLayout.navigationCapacity(contentWidth,widths);
     }
     public void localeChanged(){if(!operationFailed)notice="";focusNote="";navScrolled=false;}
     private void refreshNavigation(){

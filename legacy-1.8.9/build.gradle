@@ -18,6 +18,7 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
     withSourcesJar()
 }
+sourceSets.main.java.srcDir('../src/main/java/com/fullyx/texturemixer/ui/shared')
 tasks.withType(JavaCompile).configureEach {
     options.release = 8
     options.encoding = 'UTF-8'
@@ -31,6 +32,12 @@ processResources {
     filesMatching('fabric.mod.json') { expand version: project.version }
     from('../src/main/resources/assets/texturemixer/textures/gui/icon.png') {
         into 'assets/texturemixer'
+    }
+    from('../src/main/resources/assets/texturemixer/font') {
+        into 'assets/texturemixer/font'
+    }
+    from('../src/main/resources/assets/texturemixer/i18n/en_us.json') {
+        into 'assets/texturemixer/i18n'
     }
 }
 tasks.withType(Jar).configureEach {

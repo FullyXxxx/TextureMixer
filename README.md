@@ -12,7 +12,7 @@ TextureMixer is a client-side Fabric mod for Minecraft Java Edition. Stack your 
 
 ## Installation
 
-For **Minecraft 1.8.9**, use the [Legacy Fabric edition](legacy-1.8.9/README.md). It has its own [release download](https://github.com/FullyXxxx/TextureMixer/releases/tag/v1.0.0-mc1.8.9).
+For **Minecraft 1.8.9**, use the [Legacy Fabric edition](legacy-1.8.9/README.md). It has its own [release download](https://github.com/FullyXxxx/TextureMixer/releases/tag/v1.0.1-mc1.8.9).
 
 For Minecraft 1.20.x, 1.21.x, and 26.x:
 
