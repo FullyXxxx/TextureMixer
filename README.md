@@ -1,6 +1,6 @@
 # TextureMixer
 
-TextureMixer is a client-side Fabric mod for Minecraft Java Edition. Stack your usual resource packs, then choose a separate source for individual assets. You can keep your building textures, select a sword from an older pack, and use a custom sky from another pack in the same mix.
+TextureMixer is a client-side resource pack mixer for Minecraft Java Edition, with Fabric builds and a Forge build for Minecraft 1.8.9. Stack your usual resource packs, then choose a separate source for individual assets. You can keep your building textures, select a sword from an older pack, and use a custom sky from another pack in the same mix.
 
 ## Features
 
