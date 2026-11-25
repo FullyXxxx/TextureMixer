@@ -5,8 +5,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
 import com.fullyx.texturemixer.legacy.LegacyAssets.Pack;
 import com.fullyx.texturemixer.legacy.LegacyAssets.Target;
-import com.fullyx.texturemixer.legacy.mixin.DefaultPackAccessor;
-import com.fullyx.texturemixer.legacy.mixin.MinecraftAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.resource.DefaultResourcePack;
 import net.minecraft.resource.ReloadableResourceManager;
@@ -84,7 +82,7 @@ public final class LegacyMixer {
         this.client = client;
         this.config = client.runDirectory.toPath().resolve("config/texturemixer-legacy.json");
         this.packDirectory = client.runDirectory.toPath().resolve("resourcepacks");
-        this.vanilla = ((MinecraftAccessor) client).texturemixer$defaultPack();
+        this.vanilla = LegacyPlatform.defaultPack(client);
         this.state = readState();
         this.targets = LegacyAssets.catalog(vanillaPaths());
         this.names = new LegacyNames(vanilla, targets);
@@ -113,7 +111,7 @@ public final class LegacyMixer {
                 LOG.warn("Could not index built-in textures", error);
             }
         }
-        for (String key : ((DefaultPackAccessor) vanilla).texturemixer$assetIndex().keySet()) {
+        for (String key : LegacyPlatform.assetIndex(vanilla).keySet()) {
             if (key.startsWith("minecraft:")) names.add(key.substring("minecraft:".length()));
         }
         names.add("textures/items/diamond_sword.png");

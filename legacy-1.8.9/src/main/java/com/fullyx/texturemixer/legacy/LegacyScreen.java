@@ -769,8 +769,7 @@ public final class LegacyScreen extends Screen {
                 if (fallback(target, source)) center(tr("Vanilla fallback"), width / 2, y + size + 4, dialogWidth - 20, MixerLayout.SECONDARY);
             }
         } else if (dialog == Dialog.SETTINGS) {
-            center(tr("Version") + " " + net.fabricmc.loader.api.FabricLoader.getInstance()
-                    .getModContainer("texturemixer").get().getMetadata().getVersion().getFriendlyString(), width / 2, dialogY + 28, dialogWidth - 20, MixerLayout.SECONDARY);
+            center(tr("Version") + " " + LegacyPlatform.version(), width / 2, dialogY + 28, dialogWidth - 20, MixerLayout.SECONDARY);
             center(tr("Language"), width / 2, dialogY + 40, dialogWidth - 20, MixerLayout.SECONDARY);
         } else if (dialog == Dialog.SETS) {
             drawSets(mx, my);

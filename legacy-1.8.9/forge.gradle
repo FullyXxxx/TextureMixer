@@ -1,0 +1,89 @@
+// Forge 1.8.9 uses SRG in production. Both loaders compile the same named client classes.
+def forgeVersion = '1.8.9-11.15.1.2318-1.8.9'
+
+repositories {
+    maven {
+        url = 'https://maven.minecraftforge.net/'
+        metadataSources {
+            mavenPom()
+            artifact()
+        }
+        content {
+            includeGroup 'net.minecraftforge'
+            includeGroup 'de.oceanlabs.mcp'
+        }
+    }
+    maven { url = 'https://libraries.minecraft.net/' }
+    maven { url = 'https://maven.legacyfabric.net/' }
+    maven { url = 'https://maven.fabricmc.net/' }
+    mavenCentral()
+}
+
+configurations {
+    forgeSrg { transitive = false }
+    forgeIntermediary { transitive = false }
+    forgeYarn { transitive = false }
+}
+
+sourceSets {
+    forge {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    }
+    forgeTools {}
+}
+
+dependencies {
+    forgeCompileOnly "net.minecraftforge:forge:${forgeVersion}:universal"
+    forgeCompileOnly('net.minecraft:launchwrapper:1.12') { transitive = false }
+    forgeCompileOnly 'org.ow2.asm:asm-all:5.0.3'
+    forgeToolsImplementation 'net.fabricmc:tiny-remapper:0.13.0'
+    forgeToolsImplementation 'net.fabricmc:mapping-io:0.8.0'
+    forgeSrg "de.oceanlabs.mcp:mcp:${minecraft_version}:srg@zip"
+    forgeIntermediary "net.legacyfabric:intermediary:${minecraft_version}:v2"
+    forgeYarn "net.legacyfabric:yarn:${minecraft_version}+build.${yarn_build}:v2"
+}
+
+tasks.named('processForgeResources') {
+    inputs.property('version', project.version)
+    filesMatching(['mcmod.info', 'version.properties']) { expand version: project.version }
+}
+
+def namedForge = tasks.register('forgeNamedJar', Jar) {
+    dependsOn tasks.named('classes'), tasks.named('forgeClasses')
+    archiveClassifier = 'forge-named'
+    destinationDirectory = layout.buildDirectory.dir('intermediates/forge')
+    from(sourceSets.main.output) {
+        exclude 'fabric.mod.json', 'texturemixer.legacy.mixins.json',
+                'com/fullyx/texturemixer/legacy/mixin/**',
+                'com/fullyx/texturemixer/legacy/LegacyPlatform.class'
+    }
+    from(sourceSets.forge.output)
+    manifest {
+        attributes 'FMLCorePlugin': 'com.fullyx.texturemixer.forge.bootstrap.ForgeLoadingPlugin',
+                'FMLCorePluginContainsFMLMod': 'true'
+    }
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+tasks.register('forgeJar', JavaExec) {
+    group = 'build'
+    description = 'Build the installable Minecraft 1.8.9 Forge JAR.'
+    dependsOn namedForge, tasks.named('forgeToolsClasses')
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+    classpath = sourceSets.forgeTools.runtimeClasspath
+    mainClass = 'com.fullyx.texturemixer.tooling.ForgeRemap'
+    def artifact = layout.buildDirectory.file("libs/TextureMixer-${project.version}-forge.jar")
+    inputs.files namedForge.flatMap { it.archiveFile }, configurations.forgeIntermediary,
+            configurations.forgeYarn, configurations.forgeSrg, sourceSets.main.compileClasspath
+    outputs.file artifact
+    doFirst {
+        args = [
+                configurations.forgeIntermediary.singleFile,
+                configurations.forgeYarn.singleFile,
+                configurations.forgeSrg.singleFile,
+                namedForge.get().archiveFile.get().asFile,
+                artifact.get().asFile
+        ] + sourceSets.main.compileClasspath.files
+    }
+}

@@ -43,3 +43,5 @@ processResources {
 tasks.withType(Jar).configureEach {
     from('../LICENSE') { into 'META-INF' }
 }
+
+apply from: 'forge.gradle'

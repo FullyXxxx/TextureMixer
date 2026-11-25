@@ -1,0 +1,12 @@
+[
+  {
+    "modid": "texturemixer",
+    "name": "TextureMixer",
+    "description": "Mix individual assets from multiple resource packs in Minecraft 1.8.9.",
+    "version": "${version}",
+    "mcversion": "1.8.9",
+    "url": "https://github.com/FullyXxxx/TextureMixer",
+    "authorList": ["FullyX"],
+    "logoFile": "assets/texturemixer/icon.png"
+  }
+]

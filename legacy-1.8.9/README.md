@@ -1,12 +1,15 @@
 # TextureMixer for Minecraft 1.8.9
 
-Mix individual assets from several resource packs over Minecraft's active pack stack. The Legacy Fabric edition opens the TextureMixer editor directly from **Options → Resource Packs**. Its translucent, rounded window uses the modern edition's Resourcepack layout, Barlow typeface, category navigation, and action symbols.
+Mix individual assets from several resource packs over Minecraft's active pack stack. The Legacy Fabric and Forge builds open the same TextureMixer editor directly from **Options → Resource Packs**. Its translucent, rounded window uses the modern edition's Resourcepack layout, Barlow typeface, category navigation, and action symbols.
 
 ## Install
 
-1. Install [Legacy Fabric](https://legacyfabric.net/usage.html) for **Minecraft 1.8.9**, with **Fabric Loader 0.18.4** or later.
-2. Configure the Minecraft 1.8.9 profile to run on **64-bit Java 8**.
-3. Place the 1.8.9 TextureMixer JAR in that profile's `mods` directory. Replace any earlier TextureMixer JAR in the same profile. The JAR has no additional mod dependencies. [Download the 1.8.9 release](https://github.com/FullyXxxx/TextureMixer/releases/tag/v1.0.1-mc1.8.9)
+| Loader for Minecraft 1.8.9 | Minimum build | Download |
+| --- | --- | --- |
+| [Legacy Fabric](https://legacyfabric.net/usage.html) | Fabric Loader 0.18.4 | [Legacy Fabric JAR](https://github.com/FullyXxxx/TextureMixer/releases/tag/v1.0.1-mc1.8.9) |
+| [Minecraft Forge](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.8.9.html) | 11.15.1.2318 | [Forge JAR](https://github.com/FullyXxxx/TextureMixer/releases/tag/v1.0.1-mc1.8.9-forge) |
+
+Use **64-bit Java 8**. Put only the JAR for your loader in the instance's `mods` directory. Both are client-side and require no additional mods.
 
 ## Use TextureMixer
 
@@ -16,7 +19,7 @@ Mix individual assets from several resource packs over Minecraft's active pack s
 4. Use **Apply** to commit changes and stay in the editor, or **Done** to apply and return. **Custom Sets** saves both overrides and the base pack order. **Undo** reverses one edit, **Revert** restores the applied mix, and **Reset Mix** clears individual overrides while retaining the base pack stack.
 5. Open **Settings** to switch between English and Simplified Chinese or check the installed build version. Narrow windows keep the two pack columns and show navigation arrows when the categories need more space.
 
-The first visit retains local packs selected in the original Minecraft menu. Existing 1.8.9 TextureMixer overrides and named sets are read from the same configuration.
+The first visit retains local packs selected in the original Minecraft menu. Both loader builds use `config/texturemixer-legacy.json` in the current instance. When switching loaders between separate instances, you can copy that file along with your resource packs, keeping their paths relative to `resourcepacks`.
 
 ## Supported assets
 
@@ -33,12 +36,13 @@ Use JDK 25 to run the repository's Gradle Wrapper. Install JDK 8 for the develop
 
 ```sh
 ./gradlew -p legacy-1.8.9 build
+./gradlew -p legacy-1.8.9 forgeJar
 ```
 
-On Windows, use `gradlew.bat -p legacy-1.8.9 build`. The installable JAR is written to `legacy-1.8.9/build/libs/TextureMixer-1.0.1+1.8.9.jar`. Run the same wrapper with `runClient` in place of `build` to start the development client.
+On Windows, use `gradlew.bat` in place of `./gradlew`. Both installable JARs appear in `legacy-1.8.9/build/libs`. The Forge file ends in `-forge.jar`. The `runClient` command starts the Legacy Fabric development client.
 
-The [shared UI source](../src/main/java/com/fullyx/texturemixer/ui/shared/MixerLayout.java) is compiled into both builds. It defines window geometry, navigation fitting, controls, shapes, colors, and search matching. Each build uses its Minecraft version's screen, texture, audio, and resource-reload APIs.
+The two 1.8.9 builds share the legacy editor, preview, pack, and persistence code. They also use the [shared UI source](../src/main/java/com/fullyx/texturemixer/ui/shared/MixerLayout.java) used by the modern edition. Legacy Fabric installs the screen and resource-reload hooks through Mixins. Forge uses its client transformer and writes the same common code with the SRG names required by Forge 1.8.9.
 
 ## Verification
 
-The release JAR was checked in an isolated Minecraft 1.8.9 client with Legacy Fabric Loader 0.18.4 and Java 8. Checks covered the direct menu entry, wide and compact layouts, grouped sources, source dialogs, pack priority including a test server pack, sound audition, language settings, and draft controls. The active resource bytes were compared with the selected source files after applying and restarting the client.
+The packaged JARs were checked in isolated Minecraft 1.8.9 clients with Java 8, using Forge 11.15.1.2318 and Legacy Fabric Loader 0.18.4. Checks covered the direct menu entry, grouped sources, source dialogs, priority over a test server pack, water and lava, sound audition, language settings, and draft controls. The active resource bytes were compared with the selected source files after applying and restarting the client.
